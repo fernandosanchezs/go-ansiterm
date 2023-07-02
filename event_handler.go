@@ -2,10 +2,10 @@ package ansiterm
 
 type AnsiEventHandler interface {
 	// Print
-	Print(b byte) error
+	Print(b rune) error
 
 	// Execute C0 commands
-	Execute(b byte) error
+	Execute(b rune) error
 
 	// CUrsor Up
 	CUU(int) error

@@ -20,12 +20,12 @@ func (h *TestAnsiEventHandler) recordCall(call string, params []string) {
 	h.FunctionCalls = append(h.FunctionCalls, s)
 }
 
-func (h *TestAnsiEventHandler) Print(b byte) error {
+func (h *TestAnsiEventHandler) Print(b rune) error {
 	h.recordCall("Print", []string{string(b)})
 	return nil
 }
 
-func (h *TestAnsiEventHandler) Execute(b byte) error {
+func (h *TestAnsiEventHandler) Execute(b rune) error {
 	h.recordCall("Execute", []string{string(b)})
 	return nil
 }

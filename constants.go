@@ -115,10 +115,10 @@ const (
 	FILL_CHARACTER = ' '
 )
 
-func getByteRange(start byte, end byte) []byte {
-	bytes := make([]byte, 0, 32)
+func getByteRange(start rune, end rune) []rune {
+	bytes := make([]rune, 0, 32)
 	for i := start; i <= end; i++ {
-		bytes = append(bytes, byte(i))
+		bytes = append(bytes, i)
 	}
 
 	return bytes
@@ -154,7 +154,7 @@ var escapeToGroundBytes = getEscapeToGroundBytes()
 // See http://www.vt100.net/emu/vt500_parser.png for description of the complex
 // byte ranges below
 
-func getEscapeToGroundBytes() []byte {
+func getEscapeToGroundBytes() []rune {
 	escapeToGroundBytes := getByteRange(0x30, 0x4F)
 	escapeToGroundBytes = append(escapeToGroundBytes, getByteRange(0x51, 0x57)...)
 	escapeToGroundBytes = append(escapeToGroundBytes, 0x59)
@@ -164,15 +164,15 @@ func getEscapeToGroundBytes() []byte {
 	return escapeToGroundBytes
 }
 
-func getExecuteBytes() []byte {
+func getExecuteBytes() []rune {
 	executeBytes := getByteRange(0x00, 0x17)
 	executeBytes = append(executeBytes, 0x19)
 	executeBytes = append(executeBytes, getByteRange(0x1C, 0x1F)...)
 	return executeBytes
 }
 
-func getToGroundBytes() []byte {
-	groundBytes := []byte{0x18}
+func getToGroundBytes() []rune {
+	groundBytes := []rune{0x18}
 	groundBytes = append(groundBytes, 0x1A)
 	groundBytes = append(groundBytes, getByteRange(0x80, 0x8F)...)
 	groundBytes = append(groundBytes, getByteRange(0x91, 0x97)...)

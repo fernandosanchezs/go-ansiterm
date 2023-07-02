@@ -8,23 +8,24 @@ import (
 func TestStateTransitions(t *testing.T) {
 	stateTransitionHelper(t, "CsiEntry", "Ground", alphabetics)
 	stateTransitionHelper(t, "CsiEntry", "CsiParam", csiCollectables)
-	stateTransitionHelper(t, "Escape", "CsiEntry", []byte{ANSI_ESCAPE_SECONDARY})
-	stateTransitionHelper(t, "Escape", "OscString", []byte{0x5D})
+	stateTransitionHelper(t, "Escape", "CsiEntry", []rune{ANSI_ESCAPE_SECONDARY})
+	stateTransitionHelper(t, "Escape", "OscString", []rune{0x5D})
 	stateTransitionHelper(t, "Escape", "Ground", escapeToGroundBytes)
 	stateTransitionHelper(t, "Escape", "EscapeIntermediate", intermeds)
 	stateTransitionHelper(t, "EscapeIntermediate", "EscapeIntermediate", intermeds)
 	stateTransitionHelper(t, "EscapeIntermediate", "EscapeIntermediate", executors)
 	stateTransitionHelper(t, "EscapeIntermediate", "Ground", escapeIntermediateToGroundBytes)
-	stateTransitionHelper(t, "OscString", "Ground", []byte{ANSI_BEL})
-	stateTransitionHelper(t, "OscString", "Ground", []byte{0x5C})
+	stateTransitionHelper(t, "OscString", "Ground", []rune{ANSI_BEL, 0x9C})
+	stateTransitionHelper(t, "OscString", "OscString", printables)
+	stateTransitionHelper(t, "OscString", "Escape", []rune{ANSI_ESCAPE_PRIMARY})
 	stateTransitionHelper(t, "Ground", "Ground", executors)
 }
 
 func TestAnyToX(t *testing.T) {
-	anyToXHelper(t, []byte{ANSI_ESCAPE_PRIMARY}, "Escape")
-	anyToXHelper(t, []byte{DCS_ENTRY}, "DcsEntry")
-	anyToXHelper(t, []byte{OSC_STRING}, "OscString")
-	anyToXHelper(t, []byte{CSI_ENTRY}, "CsiEntry")
+	anyToXHelper(t, []rune{ANSI_ESCAPE_PRIMARY}, "Escape")
+	anyToXHelper(t, []rune{DCS_ENTRY}, "DcsEntry")
+	anyToXHelper(t, []rune{OSC_STRING}, "OscString")
+	anyToXHelper(t, []rune{CSI_ENTRY}, "CsiEntry")
 	anyToXHelper(t, toGroundBytes, "Ground")
 }
 
@@ -52,21 +53,21 @@ func TestCollectCsiParams(t *testing.T) {
 }
 
 func TestParseParams(t *testing.T) {
-	parseParamsHelper(t, []byte{}, []string{})
-	parseParamsHelper(t, []byte{';'}, []string{})
-	parseParamsHelper(t, []byte{';', ';'}, []string{})
-	parseParamsHelper(t, []byte{'7'}, []string{"7"})
-	parseParamsHelper(t, []byte{'7', ';'}, []string{"7"})
-	parseParamsHelper(t, []byte{'7', ';', ';'}, []string{"7"})
-	parseParamsHelper(t, []byte{'7', ';', ';', '8'}, []string{"7", "8"})
-	parseParamsHelper(t, []byte{'7', ';', '8', ';'}, []string{"7", "8"})
-	parseParamsHelper(t, []byte{'7', ';', ';', '8', ';', ';'}, []string{"7", "8"})
-	parseParamsHelper(t, []byte{'7', '8'}, []string{"78"})
-	parseParamsHelper(t, []byte{'7', '8', ';'}, []string{"78"})
-	parseParamsHelper(t, []byte{'7', '8', ';', '9', '0'}, []string{"78", "90"})
-	parseParamsHelper(t, []byte{'7', '8', ';', ';', '9', '0'}, []string{"78", "90"})
-	parseParamsHelper(t, []byte{'7', '8', ';', '9', '0', ';'}, []string{"78", "90"})
-	parseParamsHelper(t, []byte{'7', '8', ';', '9', '0', ';', ';'}, []string{"78", "90"})
+	parseParamsHelper(t, []rune{}, []string{})
+	parseParamsHelper(t, []rune{';'}, []string{})
+	parseParamsHelper(t, []rune{';', ';'}, []string{})
+	parseParamsHelper(t, []rune{'7'}, []string{"7"})
+	parseParamsHelper(t, []rune{'7', ';'}, []string{"7"})
+	parseParamsHelper(t, []rune{'7', ';', ';'}, []string{"7"})
+	parseParamsHelper(t, []rune{'7', ';', ';', '8'}, []string{"7", "8"})
+	parseParamsHelper(t, []rune{'7', ';', '8', ';'}, []string{"7", "8"})
+	parseParamsHelper(t, []rune{'7', ';', ';', '8', ';', ';'}, []string{"7", "8"})
+	parseParamsHelper(t, []rune{'7', '8'}, []string{"78"})
+	parseParamsHelper(t, []rune{'7', '8', ';'}, []string{"78"})
+	parseParamsHelper(t, []rune{'7', '8', ';', '9', '0'}, []string{"78", "90"})
+	parseParamsHelper(t, []rune{'7', '8', ';', ';', '9', '0'}, []string{"78", "90"})
+	parseParamsHelper(t, []rune{'7', '8', ';', '9', '0', ';'}, []string{"78", "90"})
+	parseParamsHelper(t, []rune{'7', '8', ';', '9', '0', ';', ';'}, []string{"78", "90"})
 }
 
 func TestCursor(t *testing.T) {
@@ -79,8 +80,8 @@ func TestCursor(t *testing.T) {
 	cursorSingleParamHelper(t, 'G', "CHA")
 	cursorTwoParamHelper(t, 'H', "CUP")
 	cursorTwoParamHelper(t, 'f', "HVP")
-	funcCallParamHelper(t, []byte{'?', '2', '5', 'h'}, "CsiEntry", "Ground", []string{"DECTCEM([true])"})
-	funcCallParamHelper(t, []byte{'?', '2', '5', 'l'}, "CsiEntry", "Ground", []string{"DECTCEM([false])"})
+	funcCallParamHelper(t, []rune{'?', '2', '5', 'h'}, "CsiEntry", "Ground", []string{"DECTCEM([true])"})
+	funcCallParamHelper(t, []rune{'?', '2', '5', 'l'}, "CsiEntry", "Ground", []string{"DECTCEM([false])"})
 }
 
 func TestErase(t *testing.T) {
@@ -92,10 +93,10 @@ func TestErase(t *testing.T) {
 }
 
 func TestSelectGraphicRendition(t *testing.T) {
-	funcCallParamHelper(t, []byte{'m'}, "CsiEntry", "Ground", []string{"SGR([0])"})
-	funcCallParamHelper(t, []byte{'0', 'm'}, "CsiEntry", "Ground", []string{"SGR([0])"})
-	funcCallParamHelper(t, []byte{'0', ';', '1', 'm'}, "CsiEntry", "Ground", []string{"SGR([0 1])"})
-	funcCallParamHelper(t, []byte{'0', ';', '1', ';', '2', 'm'}, "CsiEntry", "Ground", []string{"SGR([0 1 2])"})
+	funcCallParamHelper(t, []rune{'m'}, "CsiEntry", "Ground", []string{"SGR([0])"})
+	funcCallParamHelper(t, []rune{'0', 'm'}, "CsiEntry", "Ground", []string{"SGR([0])"})
+	funcCallParamHelper(t, []rune{'0', ';', '1', 'm'}, "CsiEntry", "Ground", []string{"SGR([0 1])"})
+	funcCallParamHelper(t, []rune{'0', ';', '1', ';', '2', 'm'}, "CsiEntry", "Ground", []string{"SGR([0 1 2])"})
 }
 
 func TestScroll(t *testing.T) {
@@ -125,17 +126,17 @@ func TestClear(t *testing.T) {
 }
 
 func TestClearOnStateChange(t *testing.T) {
-	clearOnStateChangeHelper(t, "Ground", "Escape", []byte{ANSI_ESCAPE_PRIMARY})
-	clearOnStateChangeHelper(t, "Ground", "CsiEntry", []byte{CSI_ENTRY})
+	clearOnStateChangeHelper(t, "Ground", "Escape", []rune{ANSI_ESCAPE_PRIMARY})
+	clearOnStateChangeHelper(t, "Ground", "CsiEntry", []rune{CSI_ENTRY})
 }
 
 func TestC0(t *testing.T) {
 	expectedCall := "Execute([" + string(rune(ANSI_LINE_FEED)) + "])"
-	c0Helper(t, []byte{ANSI_LINE_FEED}, "Ground", []string{expectedCall})
+	c0Helper(t, []rune{ANSI_LINE_FEED}, "Ground", []string{expectedCall})
 	expectedCall = "Execute([" + string(rune(ANSI_CARRIAGE_RETURN)) + "])"
-	c0Helper(t, []byte{ANSI_CARRIAGE_RETURN}, "Ground", []string{expectedCall})
+	c0Helper(t, []rune{ANSI_CARRIAGE_RETURN}, "Ground", []string{expectedCall})
 }
 
 func TestEscDispatch(t *testing.T) {
-	funcCallParamHelper(t, []byte{'M'}, "Escape", "Ground", []string{"RI([])"})
+	funcCallParamHelper(t, []rune{'M'}, "Escape", "Ground", []string{"RI([])"})
 }

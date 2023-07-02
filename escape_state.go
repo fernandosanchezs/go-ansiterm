@@ -4,7 +4,7 @@ type escapeState struct {
 	baseState
 }
 
-func (escState escapeState) Handle(b byte) (s state, e error) {
+func (escState escapeState) Handle(b rune) (s state, e error) {
 	escState.parser.logf("escapeState::Handle %#x", b)
 	nextState, err := escState.baseState.Handle(b)
 	if nextState != nil || err != nil {

@@ -5,7 +5,7 @@ type stateID int
 type state interface {
 	Enter() error
 	Exit() error
-	Handle(byte) (state, error)
+	Handle(rune) (state, error)
 	Name() string
 	Transition(state) error
 }
@@ -23,7 +23,7 @@ func (base baseState) Exit() error {
 	return nil
 }
 
-func (base baseState) Handle(b byte) (s state, e error) {
+func (base baseState) Handle(b rune) (s state, e error) {
 
 	switch {
 	case b == CSI_ENTRY:
@@ -47,7 +47,7 @@ func (base baseState) Name() string {
 
 func (base baseState) Transition(s state) error {
 	if s == base.parser.ground {
-		execBytes := []byte{0x18}
+		execBytes := []rune{0x18}
 		execBytes = append(execBytes, 0x1A)
 		execBytes = append(execBytes, getByteRange(0x80, 0x8F)...)
 		execBytes = append(execBytes, getByteRange(0x91, 0x97)...)

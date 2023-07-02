@@ -94,17 +94,21 @@ func getState(name string, states []state) state {
 	return nil
 }
 
-func (ap *AnsiParser) Parse(bytes []byte) (int, error) {
-	for i, b := range bytes {
-		if err := ap.handle(b); err != nil {
-			return i, err
+func (ap *AnsiParser) Parse(bytes []rune) (int, error) {
+	runes := []rune(string(bytes))
+
+	if len(runes) > 0 {
+		for i, r := range runes {
+			if err := ap.handle(r); err != nil {
+				return i, err
+			}
 		}
 	}
 
 	return len(bytes), ap.eventHandler.Flush()
 }
 
-func (ap *AnsiParser) handle(b byte) error {
+func (ap *AnsiParser) handle(b rune) error {
 	ap.context.currentChar = b
 	newState, err := ap.currState.Handle(b)
 	if err != nil {

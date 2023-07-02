@@ -4,7 +4,7 @@ type csiEntryState struct {
 	baseState
 }
 
-func (csiState csiEntryState) Handle(b byte) (s state, e error) {
+func (csiState csiEntryState) Handle(b rune) (s state, e error) {
 	csiState.parser.logf("CsiEntry::Handle %#x", b)
 
 	nextState, err := csiState.baseState.Handle(b)

@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-func sliceContains(bytes []byte, b byte) bool {
+func sliceContains(bytes []rune, b rune) bool {
 	for _, v := range bytes {
 		if v == b {
 			return true

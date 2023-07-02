@@ -4,7 +4,7 @@ type groundState struct {
 	baseState
 }
 
-func (gs groundState) Handle(b byte) (s state, e error) {
+func (gs groundState) Handle(b rune) (s state, e error) {
 	gs.parser.context.currentChar = b
 
 	nextState, err := gs.baseState.Handle(b)

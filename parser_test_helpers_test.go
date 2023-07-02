@@ -16,29 +16,38 @@ func getStateNames() []string {
 	return stateNames
 }
 
-func stateTransitionHelper(t *testing.T, start string, end string, bytes []byte) {
+func stateTransitionHelper(t *testing.T, start string, end string, bytes []rune) {
 	for _, b := range bytes {
-		bytes := []byte{byte(b)}
-		parser, _ := createTestParser(start)
-		parser.Parse(bytes)
-		validateState(t, parser.currState, end)
+		t.Run(fmt.Sprintf("Start=%s/%q", start, b), func(t *testing.T) {
+			t.Helper()
+			bytes := []rune{rune(b)}
+			parser, _ := createTestParser(start)
+			parser.Parse(bytes)
+			validateState(t, parser.currState, end)
+		})
 	}
 }
 
-func anyToXHelper(t *testing.T, bytes []byte, expectedState string) {
+func anyToXHelper(t *testing.T, bytes []rune, expectedState string) {
+	t.Helper()
 	for _, s := range getStateNames() {
 		stateTransitionHelper(t, s, expectedState, bytes)
 	}
 }
 
-func funcCallParamHelper(t *testing.T, bytes []byte, start string, expected string, expectedCalls []string) {
-	parser, evtHandler := createTestParser(start)
-	parser.Parse(bytes)
-	validateState(t, parser.currState, expected)
-	validateFuncCalls(t, evtHandler.FunctionCalls, expectedCalls)
+func funcCallParamHelper(t *testing.T, bytes []rune, start string, expected string, expectedCalls []string) {
+	t.Helper()
+	t.Run(fmt.Sprintf("Start=%s/%q", start, bytes), func(t *testing.T) {
+		t.Helper()
+		parser, evtHandler := createTestParser(start)
+		parser.Parse(bytes)
+		validateState(t, parser.currState, expected)
+		validateFuncCalls(t, evtHandler.FunctionCalls, expectedCalls)
+	})
 }
 
-func parseParamsHelper(t *testing.T, bytes []byte, expectedParams []string) {
+func parseParamsHelper(t *testing.T, bytes []rune, expectedParams []string) {
+	t.Helper()
 	params, err := parseParams(bytes)
 
 	if err != nil {
@@ -62,43 +71,48 @@ func parseParamsHelper(t *testing.T, bytes []byte, expectedParams []string) {
 	}
 }
 
-func cursorSingleParamHelper(t *testing.T, command byte, funcName string) {
-	funcCallParamHelper(t, []byte{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
-	funcCallParamHelper(t, []byte{'2', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([23])", funcName)})
-	funcCallParamHelper(t, []byte{'2', ';', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
-	funcCallParamHelper(t, []byte{'2', ';', '3', ';', '4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
+func cursorSingleParamHelper(t *testing.T, command rune, funcName string) {
+	t.Helper()
+	funcCallParamHelper(t, []rune{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
+	funcCallParamHelper(t, []rune{'2', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([23])", funcName)})
+	funcCallParamHelper(t, []rune{'2', ';', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
+	funcCallParamHelper(t, []rune{'2', ';', '3', ';', '4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
 }
 
-func cursorTwoParamHelper(t *testing.T, command byte, funcName string) {
-	funcCallParamHelper(t, []byte{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1 1])", funcName)})
-	funcCallParamHelper(t, []byte{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1 1])", funcName)})
-	funcCallParamHelper(t, []byte{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 1])", funcName)})
-	funcCallParamHelper(t, []byte{'2', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([23 1])", funcName)})
-	funcCallParamHelper(t, []byte{'2', ';', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 3])", funcName)})
-	funcCallParamHelper(t, []byte{'2', ';', '3', ';', '4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 3])", funcName)})
+func cursorTwoParamHelper(t *testing.T, command rune, funcName string) {
+	t.Helper()
+	funcCallParamHelper(t, []rune{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1 1])", funcName)})
+	funcCallParamHelper(t, []rune{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1 1])", funcName)})
+	funcCallParamHelper(t, []rune{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 1])", funcName)})
+	funcCallParamHelper(t, []rune{'2', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([23 1])", funcName)})
+	funcCallParamHelper(t, []rune{'2', ';', '3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 3])", funcName)})
+	funcCallParamHelper(t, []rune{'2', ';', '3', ';', '4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2 3])", funcName)})
 }
 
-func eraseHelper(t *testing.T, command byte, funcName string) {
-	funcCallParamHelper(t, []byte{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
-	funcCallParamHelper(t, []byte{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
-	funcCallParamHelper(t, []byte{'1', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
-	funcCallParamHelper(t, []byte{'3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([3])", funcName)})
-	funcCallParamHelper(t, []byte{'4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
-	funcCallParamHelper(t, []byte{'1', ';', '2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+func eraseHelper(t *testing.T, command rune, funcName string) {
+	t.Helper()
+	funcCallParamHelper(t, []rune{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
+	funcCallParamHelper(t, []rune{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
+	funcCallParamHelper(t, []rune{'1', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([2])", funcName)})
+	funcCallParamHelper(t, []rune{'3', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([3])", funcName)})
+	funcCallParamHelper(t, []rune{'4', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([0])", funcName)})
+	funcCallParamHelper(t, []rune{'1', ';', '2', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
 }
 
-func scrollHelper(t *testing.T, command byte, funcName string) {
-	funcCallParamHelper(t, []byte{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'1', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
-	funcCallParamHelper(t, []byte{'5', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([5])", funcName)})
-	funcCallParamHelper(t, []byte{'4', ';', '6', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([4])", funcName)})
+func scrollHelper(t *testing.T, command rune, funcName string) {
+	t.Helper()
+	funcCallParamHelper(t, []rune{command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'0', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'1', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([1])", funcName)})
+	funcCallParamHelper(t, []rune{'5', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([5])", funcName)})
+	funcCallParamHelper(t, []rune{'4', ';', '6', command}, "CsiEntry", "Ground", []string{fmt.Sprintf("%s([4])", funcName)})
 }
 
-func clearOnStateChangeHelper(t *testing.T, start string, end string, bytes []byte) {
+func clearOnStateChangeHelper(t *testing.T, start string, end string, bytes []rune) {
+	t.Helper()
 	p, _ := createTestParser(start)
 	fillContext(p.context)
 	p.Parse(bytes)
@@ -106,7 +120,8 @@ func clearOnStateChangeHelper(t *testing.T, start string, end string, bytes []by
 	validateEmptyContext(t, p.context)
 }
 
-func c0Helper(t *testing.T, bytes []byte, expectedState string, expectedCalls []string) {
+func c0Helper(t *testing.T, bytes []rune, expectedState string, expectedCalls []string) {
+	t.Helper()
 	parser, evtHandler := createTestParser("Ground")
 	parser.Parse(bytes)
 	validateState(t, parser.currState, expectedState)

@@ -4,8 +4,8 @@ import (
 	"strconv"
 )
 
-func parseParams(bytes []byte) ([]string, error) {
-	paramBuff := make([]byte, 0, 0)
+func parseParams(bytes []rune) ([]string, error) {
+	paramBuff := make([]rune, 0, 0)
 	params := []string{}
 
 	for _, v := range bytes {
@@ -14,7 +14,7 @@ func parseParams(bytes []byte) ([]string, error) {
 				// Completed parameter, append it to the list
 				s := string(paramBuff)
 				params = append(params, s)
-				paramBuff = make([]byte, 0, 0)
+				paramBuff = make([]rune, 0, 0)
 			}
 		} else {
 			paramBuff = append(paramBuff, v)
